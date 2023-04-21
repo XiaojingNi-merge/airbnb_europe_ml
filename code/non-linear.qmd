@@ -11,23 +11,47 @@ format:
         toc: true
 ---
 
-## Quarto
+## EDA
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+```{r results='hide', warning=FALSE, message=FALSE}
+library(stringr)
+library(ggplot2)
+library(reshape2)
 
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
 ```
 
-You can add options to executable code like this
-
 ```{r}
-#| echo: false
-2 * 2
-```
+## read data
 
-The `echo: false` option disables the printing of code (only output is displayed).
+airbnb <- read.csv("../data/Aemf1.csv")
+str(airbnb)
+```
+```{r}
+library(corrgram)
+nums <- unlist(lapply(airbnb, is.numeric), use.names = FALSE)  
+air_num <- airbnb[ , nums]
+
+
+
+corrgram(airbnb,
+         order = TRUE,              # If TRUE, PCA-based re-ordering
+         upper.panel = panel.pie,   # Panel function above diagonal
+         lower.panel = panel.shade, # Panel function below diagonal
+         text.panel = panel.txt,    # Panel function of the diagonal
+         main = "Correlogram") 
+```
+### Feature selection
+
+Some of the variables have high correlation. Some regularization methods, such as ridge and lasso regression, have ability to deal with collinearity. Here, I will try using two sets of input, one is full features, and one is mannually selected feature for interpretability of the final model. 
+
+From the pair plot, Cleanliness.rating and Guest.Satisfaction; Normalised.Attraction.Index and Restraunt.Index/Normalised.Restraunt.Index/Normalised.Attraction.Index; bedrooms and Person.Capacity, Multiple.Rooms and Business. 
+
+Thus, the manually selected features are:  City, Day, Shared.Room, Private.Room, Multiple.Rooms, Superhost, Bedrooms, Cleanliness.Rating, City.Center..km., Metro.Distance..km., Normalised.Attraction.Index
+
+### Polynomial model with regularization
+One of our goal is to see which feature affect more. For regularization, I choose Lasso regression with full features, and ridge regression with manually selected features. Ridge regression will not force feature coefficient to zero, which will make interpretation confusing. 
+
+#### Lasso with full feature
+```{r}
+
+```

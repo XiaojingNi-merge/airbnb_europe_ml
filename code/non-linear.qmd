@@ -169,7 +169,7 @@ model_nonlinear <-
             Person.Capacity +
             poly(log(Normalised.Restraunt.Index), 3)+
             poly(log(Normalised.Attraction.Index), 4) + poly(log(`Metro.Distance..km.`), 3) +
-            poly(log(`City.Center..km.`, 3)) + 
+            poly(log(`City.Center..km.`), 3) + 
             log(Guest.Satisfaction) +
             City + Day + Superhost, data=train)
 
@@ -179,14 +179,57 @@ summary(model_nonlinear)
 
 With lasso regularization
 ```{r}
+# empty list
+train_list <- vector(mode='list', length=9)
 
-## model input
-cv_lasso_x <- matrix(poly(df$x,12), ncol = 12, byrow = F)
-cv_lasso_y <- as.vector(df$y)
+train_list[[1]] <- matrix(poly(train$Bedrooms, 2), ncol = 2, byrow = F)
+colnames(train_list[[1]]) <- c("Bedrooms1", "Bedrooms2")
 
-## model
-cv_lasso <- cv.glmnet(y = cv_ridge_y, 
-                      x = cv_ridge_x,
+train_list[[2]] <- matrix(train$Cleanliness.Rating, ncol = 1)
+colnames(train_list[[2]]) <- c("Cleanliness.Rating")
+
+train_list[[3]] <- matrix(train$Person.Capacity, ncol = 1)
+colnames(train_list[[3]]) <- c("Person.Capacity")
+
+train_list[[4]] <- matrix(poly(log(train$Normalised.Restraunt.Index), 3),
+                          ncol = 3, byrow = F)
+colnames(train_list[[4]]) <- paste("log(Normalised.Restraunt.Index)", 
+                                   seq.int(3), sep = "")
+
+train_list[[5]] <- matrix(poly(log(train$Normalised.Attraction.Index), 4),
+                          ncol = 4, byrow = F)
+colnames(train_list[[5]]) <- paste("log(Normalised.Attraction.Index)", 
+                                   seq.int(4), sep = "")
+
+train_list[[6]] <- matrix(poly(log(train$`Metro.Distance..km.`), 3),
+                          ncol = 3, byrow = F)
+colnames(train_list[[6]]) <- paste("log(Metro.Distance..km.)", 
+                                   seq.int(3), sep = "")
+
+train_list[[7]] <- matrix(poly(log(train$`City.Center..km.`), 3),
+                          ncol = 3, byrow = F)
+colnames(train_list[[7]]) <- paste("log(City.Center..km.)", 
+                                   seq.int(3), sep = "")
+
+train_list[[8]] <- matrix(log(train$Guest.Satisfaction), ncol = 1)
+colnames(train_list[[8]]) <- c("log(Guest.Satisfaction)")
+
+train_list[[9]] <- model.matrix(~ Day + City + Superhost, data = train)
+train_list[[9]] <- train_list[[9]][,-1] ## remove Intercept
+
+## sanity check
+lapply(train_list, dim)
+
+cv_lasso_x <- do.call("cbind", train_list)
+```
+
+```{r}
+
+cv_lasso_y <- as.vector(log(train$Price))
+
+## model, 10 fold cv on alpha
+cv_lasso <- cv.glmnet(y = cv_lasso_y, 
+                      x = cv_lasso_x,
                       alpha = 1, # 1 is lasso regression
                       standardize = TRUE, 
                       nfolds = 10,
@@ -195,25 +238,19 @@ cv_lasso <- cv.glmnet(y = cv_ridge_y,
 ## prediction
 pred <- predict(cv_lasso, s = cv_lasso$lambda.1se, newx = cv_lasso_x)
 
-##1se
+##1se, best (note: cv best point is not the minium)
 cv_lasso$lambda.1se
 ##rms
 (rms_cv_10 <- cv_lasso$cvm[which(cv_lasso$lambda==cv_lasso$lambda.1se)])
 
 
 ## plot
-df$yhat_ridge <- as.vector(pred)
-p <- df %>%
-  ggplot() +
-  geom_point(aes(x = x, y = y, color = "Observed"), size = 0.5) + 
-  geom_line(aes(x = x, y = yhat_ridge, color = "Predicted"), size = 2, 
-            linetype = "dashed") + 
-  scale_color_manual(name = "Legend", 
-                     values = c("Predicted" = "red", "Observed" = "black")) +
-  ggtitle(paste("Polynomial model with lasso regression of degrees of",k)) +
-  xlab("Time") + ylab("FTSE")
-
-p
+train$yhat_lasso <- as.vector(pred)
+train$logy <- log(train$Price)
+ggplot(train, aes(x=logy, y= yhat_lasso)) +
+  geom_point() +
+  geom_abline(intercept=0, slope=1) +
+  labs(x='Observed log prices', y='Predicted log prices', title='Predicted vs. Observed Values')
 ```
 
 For regularization, I choose Lasso regression with full features. In this way, some of the feature will have coefficient of zero, making the model simplier. 

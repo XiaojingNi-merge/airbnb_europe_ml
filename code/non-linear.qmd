@@ -14,9 +14,18 @@ format:
 ## EDA
 
 ```{r results='hide', warning=FALSE, message=FALSE}
-library(stringr)
+library(caret)
+library(dplyr)
+library(tidyr)
+library(rpart)
+library(rattle)
 library(ggplot2)
+library(stringr)
 library(reshape2)
+library(tidyverse)
+library(visNetwork)
+
+
 
 ```
 
@@ -42,16 +51,51 @@ corrgram(airbnb,
 ```
 ### Feature selection
 
-Some of the variables have high correlation. Some regularization methods, such as ridge and lasso regression, have ability to deal with collinearity. Here, I will try using two sets of input, one is full features, and one is mannually selected feature for interpretability of the final model. 
+Some of the variables have high correlation. Some regularization methods, such as ridge and lasso regression, have ability to deal with collinearity. Here, I will try using two sets of inputs, one is full features, and one is mannually selected feature for interpretability of the final model. 
 
 From the pair plot, Cleanliness.rating and Guest.Satisfaction; Normalised.Attraction.Index and Restraunt.Index/Normalised.Restraunt.Index/Normalised.Attraction.Index; bedrooms and Person.Capacity, Multiple.Rooms and Business. 
 
 Thus, the manually selected features are:  City, Day, Shared.Room, Private.Room, Multiple.Rooms, Superhost, Bedrooms, Cleanliness.Rating, City.Center..km., Metro.Distance..km., Normalised.Attraction.Index
 
-### Polynomial model with regularization
-One of our goal is to see which feature affect more. For regularization, I choose Lasso regression with full features, and ridge regression with manually selected features. Ridge regression will not force feature coefficient to zero, which will make interpretation confusing. 
+
+### Training, testing, validation spliting
+
+```{r}
+set.seed(51215)
+
+## generate 1-3 as the group of training, testing, and validation set
+idx <- sample(seq(1, 3), size = nrow(airbnb), replace = TRUE, prob = c(.75, .15, .15))
+train <- airbnb[idx == 1,]
+dev <- airbnb[idx == 2,]
+test <- airbnb[idx == 3,]
+
+dim(train);dim(dev);dim(test)
+```
+```{r}
+## save the datasets
+# write.csv(train, "../data/train.csv")
+# write.csv(dev, "../data/dev.csv")
+# write.csv(test, "../data/test.csv")
+```
+
+### Polynomial model without regularization, using CV tuning polynomial degree to prevent overfit
+
+```{r}
+
+```
+
+One of our goal is to see which feature affect more. For regularization, I choose Lasso regression with full features, and ridge regression with manually selected features. Ridge regression will not force feature coefficients to zero, which will make interpretation confusing. 
 
 #### Lasso with full feature
 ```{r}
+full_m <- dummyVars(Price ~ ., data = airbnb, fullRank = F) %>%
+  predict(newdata = airbnb) %>%
+  as.matrix()
 
+## set up lasso
+set.seed(51215)
+airbnb_lasso <- glmnet(y = airbnb$Price, x = full_m, standardize = TRUE)
+plot(airbnb_lasso, xvar="lambda")
+
+```
 ```

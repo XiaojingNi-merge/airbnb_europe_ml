@@ -243,7 +243,8 @@ pred <- predict(cv_lasso, s = cv_lasso$lambda.1se, newx = cv_lasso_x)
 cv_lasso$lambda.1se
 ##rms
 (rms_cv_10 <- cv_lasso$cvm[which(cv_lasso$lambda==cv_lasso$lambda.1se)])
-
+## CV sd
+(mean(cv_lasso$cvsd))
 
 ## plot
 train$yhat_lasso <- as.vector(pred)
@@ -256,6 +257,16 @@ ggplot(train, aes(x=logy, y= yhat_lasso)) +
 ### Training MSE for log price
 ```{r}
 mean((train$logy - train$yhat_lasso)^2)
+```
+### cv rms
+```{r}
+##rms
+(rms_cv_10 <- cv_lasso$cvm[which(cv_lasso$lambda==cv_lasso$lambda.1se)])
+```
+### CV sd
+```{r}
+## CV sd
+(mean(cv_lasso$cvsd))
 ```
 
 For regularization, I choose Lasso regression with full features. In this way, some of the feature will have coefficient of zero, making the model simplier. 

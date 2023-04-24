@@ -82,6 +82,7 @@ dev <- airbnb[idx == 2,]
 test <- airbnb[idx == 3,]
 
 dim(train);dim(dev);dim(test)
+test1 <- rbind(dev,test)
 ```
 
 ```{r}
@@ -276,39 +277,39 @@ For regularization, I choose Lasso regression with full features. In this way, s
 # empty list
 test_list <- vector(mode='list', length=9)
 
-test_list[[1]] <- matrix(poly(test$Bedrooms, 2), ncol = 2, byrow = F)
+test_list[[1]] <- matrix(poly(test1$Bedrooms, 2), ncol = 2, byrow = F)
 colnames(test_list[[1]]) <- c("Bedrooms1", "Bedrooms2")
 
-test_list[[2]] <- matrix(test$Cleanliness.Rating, ncol = 1)
+test_list[[2]] <- matrix(test1$Cleanliness.Rating, ncol = 1)
 colnames(test_list[[2]]) <- c("Cleanliness.Rating")
 
-test_list[[3]] <- matrix(test$Person.Capacity, ncol = 1)
+test_list[[3]] <- matrix(test1$Person.Capacity, ncol = 1)
 colnames(test_list[[3]]) <- c("Person.Capacity")
 
-test_list[[4]] <- matrix(poly(log(test$Normalised.Restraunt.Index), 3),
+test_list[[4]] <- matrix(poly(log(test1$Normalised.Restraunt.Index), 3),
                           ncol = 3, byrow = F)
 colnames(test_list[[4]]) <- paste("log(Normalised.Restraunt.Index)", 
                                    seq.int(3), sep = "")
 
-test_list[[5]] <- matrix(poly(log(test$Normalised.Attraction.Index), 4),
+test_list[[5]] <- matrix(poly(log(test1$Normalised.Attraction.Index), 4),
                           ncol = 4, byrow = F)
 colnames(test_list[[5]]) <- paste("log(Normalised.Attraction.Index)", 
                                    seq.int(4), sep = "")
 
-test_list[[6]] <- matrix(poly(log(test$`Metro.Distance..km.`), 3),
+test_list[[6]] <- matrix(poly(log(test1$`Metro.Distance..km.`), 3),
                           ncol = 3, byrow = F)
 colnames(test_list[[6]]) <- paste("log(Metro.Distance..km.)", 
                                    seq.int(3), sep = "")
 
-test_list[[7]] <- matrix(poly(log(test$`City.Center..km.`), 3),
+test_list[[7]] <- matrix(poly(log(test1$`City.Center..km.`), 3),
                           ncol = 3, byrow = F)
 colnames(test_list[[7]]) <- paste("log(City.Center..km.)", 
                                    seq.int(3), sep = "")
 
-test_list[[8]] <- matrix(log(test$Guest.Satisfaction), ncol = 1)
+test_list[[8]] <- matrix(log(test1$Guest.Satisfaction), ncol = 1)
 colnames(test_list[[8]]) <- c("log(Guest.Satisfaction)")
 
-test_list[[9]] <- model.matrix(~ Day + City + Superhost, data = test)
+test_list[[9]] <- model.matrix(~ Day + City + Superhost, data = test1)
 test_list[[9]] <- test_list[[9]][,-1] ## remove Intercept
 
 ## sanity check
@@ -319,21 +320,21 @@ test_x <- do.call("cbind", test_list)
 
 ```{r}
 
-cv_lasso_y <- as.vector(log(test$Price))
+cv_lasso_y <- as.vector(log(test1$Price))
 
 ## prediction
 pred_test <- predict(cv_lasso, s = cv_lasso$lambda.1se, newx = test_x)
 
 ## plot
-test$yhat_lasso <- as.vector(pred_test)
-test$logy <- log(test$Price)
-ggplot(test, aes(x=logy, y= yhat_lasso)) +
+test1$yhat_lasso <- as.vector(pred_test)
+test1$logy <- log(test1$Price)
+ggplot(test1, aes(x=logy, y= yhat_lasso)) +
   geom_point() +
   geom_abline(intercept=0, slope=1) +
   labs(x='Observed log prices', y='Predicted log prices', title='Predicted vs. Observed Values for test set')
 
 ## MSE
 
-mean((test$logy - test$yhat_lasso)^2)
+mean((test1$logy - test1$yhat_lasso)^2)
 
 ```

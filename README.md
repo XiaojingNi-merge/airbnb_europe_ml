@@ -24,8 +24,8 @@ Our study aims to analyze how different features are correlated with room listin
 
 
 * The `code/` directory contains all codes file during EDA process with following sub-directories:
-    * `code_for_eda/`: Codes for initial EDA including `EDA.ipynb`,`visualization_xn19.ipynb`.
-    * `code_for_model/`: Codes for different model including `linear.ipynb`, `non-linear.html`, `ridge-lasso.ipynb`, `bagging-boosting.ipynb`, `model_summary.ipynb`.
+    * `code_for_eda/`: Codes for initial EDA including `EDA_1.ipynb`,`EDA_2.ipynb`.
+    * `code_for_model/`: Codes for different model including `linear.ipynb`, `non-linear.qmd`,`non-linear.html`, `ridge-lasso.ipynb`, `bagging-boosting.ipynb`, `model_summary.ipynb`.
 
 
 * The `data/` directory contains all data files with following sub-directories:

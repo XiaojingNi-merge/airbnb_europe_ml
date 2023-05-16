@@ -1,6 +1,3 @@
-
-# ANLY 512 Final Project Group 15
-
 ## Airbnb Price Prediction in European Cites
 
 * Xiaojing Ni xn19@georgetown.edu
